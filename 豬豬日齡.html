@@ -1,0 +1,142 @@
+<<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>豬隻日齡自動換算系統</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="date"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: #eef2f3;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .result-item {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .age-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>豬隻日齡自動換算</h2>
+    
+    <div class="form-group">
+        <label for="todayDate">第一行：今天日期</label>
+        <input type="date" id="todayDate" onchange="calculateAge()">
+    </div>
+
+    <div class="form-group">
+        <label for="batchInput">第二行：批次 (MMDD，例: 0512)</label>
+        <input type="text" id="batchInput" maxlength="4" placeholder="請輸入4位數字 MMDD" oninput="calculateAge()">
+    </div>
+
+    <div class="result-box" id="resultBox" style="display: none;">
+        <div class="result-item">第三行：目前日齡</div>
+        <div class="age-number"><span id="ageDays">0</span> 天</div>
+    </div>
+</div>
+
+<script>
+    // 網頁載入時，自動將第一行設為今天的日期
+    window.onload = function() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('todayDate').value = `${year}-${month}-${day}`;
+    };
+
+    function calculateAge() {
+        const todayVal = document.getElementById('todayDate').value;
+        const batchVal = document.getElementById('batchInput').value.trim();
+        const resultBox = document.getElementById('resultBox');
+
+        if (!todayVal || batchVal.length !== 4) {
+            resultBox.style.display = 'none';
+            return;
+        }
+
+        const monthStr = batchVal.substring(0, 2);
+        const dayStr = batchVal.substring(2, 4);
+        
+        const todayDateObj = new Date(todayVal);
+        const currentYear = todayDateObj.getFullYear();
+
+        // 組合批次日期（預設使用當年度）
+        let batchDate = new Date(`${currentYear}-${monthStr}-${dayStr}`);
+
+        // 如果算出來的批次日期比今天還晚，代表該批次可能是去年跨年留下來的
+        if (batchDate > todayDateObj) {
+            batchDate = new Date(`${currentYear - 1}-${monthStr}-${dayStr}`);
+        }
+
+        // 計算天數差 (今天日期 - 批次日期)
+        const diffTime = todayDateObj - batchDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // 套用公式：第一行減第二行 + 28
+        const finalAge = diffDays + 28;
+
+        if (finalAge < 0) {
+            alert('計算出的日齡異常（小於0），請檢查日期或批次是否輸入正確！');
+            resultBox.style.display = 'none';
+            return;
+        }
+
+        // 顯示結果
+        document.getElementById('ageDays').innerText = finalAge;
+        resultBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
